@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "405079895193",
+    "project_id": "drussell22-trivia-app",
+    "storage_bucket": "drussell22-trivia-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:405079895193:android:ac2630347658ae74155c08",
+        "android_client_info": {
+          "package_name": "edu.uco.drussell22.trivia_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "405079895193-bqc34raibe82er5kle9dkg8me1m4160b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcEARmJYJYkezjKHm7UukzT-x2gqRcoXM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "405079895193-bqc34raibe82er5kle9dkg8me1m4160b.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "405079895193-9dpimhp09enfngl24i0phkb193qpf04v.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "edu.uco.drussell22.triviaApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
