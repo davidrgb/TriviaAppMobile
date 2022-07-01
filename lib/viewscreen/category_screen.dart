@@ -5,7 +5,7 @@ import 'package:trivia_app/viewscreen/create_screen.dart';
 class CategoryScreen extends StatefulWidget {
   static const routeName = '/categoryScreen';
 
-  const CategoryScreen(List<Category> this.categories, {Key? key})
+  const CategoryScreen(this.categories, {Key? key})
       : super(key: key);
 
   final List<Category> categories;
@@ -30,7 +30,9 @@ class _CategoryScreenState extends State<CategoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: Text('Choose a Category'),
+      ),
       body: Container(
         padding: EdgeInsets.all(10),
         width: MediaQuery.of(context).size.width,

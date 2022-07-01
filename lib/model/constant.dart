@@ -9,4 +9,7 @@ class Constant {
 
 enum ARGS {
   CATEGORIES,
+  LOBBY,
+  QUESTIONS,
+  FIELDS,
 }

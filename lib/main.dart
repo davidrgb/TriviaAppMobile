@@ -2,9 +2,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:trivia_app/firebase_options.dart';
 import 'package:trivia_app/model/category.dart';
+import 'package:trivia_app/model/constant.dart';
+import 'package:trivia_app/model/lobby.dart';
+import 'package:trivia_app/viewscreen/GameScreen.dart';
 import 'package:trivia_app/viewscreen/category_screen.dart';
 import 'package:trivia_app/viewscreen/create_screen.dart';
 import 'package:trivia_app/viewscreen/home_screen.dart';
+import 'package:trivia_app/viewscreen/lobby_screen.dart';
 
 import 'firebase_options.dart';
 
@@ -42,7 +46,15 @@ class TriviaApp extends StatelessWidget {
         CreateScreen.routeName: (BuildContext context) {
           Object? args = ModalRoute.of(context)?.settings.arguments;
           return CreateScreen(args as Category);
-        }
+        },
+        LobbyScreen.routeName: (BuildContext context) {
+          Object? args = ModalRoute.of(context)?.settings.arguments;
+          return LobbyScreen(args as Lobby);
+        },
+        GameScreen.routeName: (BuildContext context) {
+          Object? args = ModalRoute.of(context)?.settings.arguments;
+          return GameScreen(args as Lobby);
+        },
       },
     );
   }

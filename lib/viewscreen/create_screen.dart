@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:trivia_app/controller/FirestoreController.dart';
 import 'package:trivia_app/model/category.dart';
+import 'package:trivia_app/model/constant.dart';
 import 'package:trivia_app/model/field.dart';
 
 import 'dart:math';
 
 import 'package:trivia_app/model/lobby.dart';
 import 'package:trivia_app/model/question.dart';
+import 'package:trivia_app/viewscreen/lobby_screen.dart';
 
 class CreateScreen extends StatefulWidget {
   static const routeName = '/createScreen';
@@ -40,7 +42,7 @@ class _CreateScreenState extends State<CreateScreen> {
         title: Text(widget.category.name + ' Lobby'),
       ),
       body: Container(
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(10),
         width: MediaQuery.of(context).size.width,
         child: Form(
           key: lobbyNameKey,
@@ -121,32 +123,46 @@ class _Controller {
       List<Question> questions =
           await FirestoreController.getQuestionsFromCategory(
               state.widget.category.name);
-      List<String> selectedQuestions = [];
+      List<dynamic> selectedQuestions = [];
       for (int i = 0; i < 1; i++) {
         int index = rng.nextInt(questions.length);
         Question selectedQuestion = questions[index];
         List<Field> fields = [];
         for (var field in selectedQuestion.fields) {
-          fields.add(await FirestoreController.getFieldFromDocId(field['data']));
+          fields
+              .add(await FirestoreController.getFieldFromDocId(field['data']));
         }
 
         selectedQuestion.fields.clear();
 
+        List<dynamic> selectedFields = [];
         for (var field in fields) {
           while (field.data.length > 5) {
             int index = rng.nextInt(field.data.length);
             field.data.removeAt(index);
           }
           field.data.shuffle();
-          field.docId = await FirestoreController.createLobbyField(field);
-          selectedQuestion.fields.add(field.docId);
+          selectedFields.add({
+            "name": field.name,
+            "data": field.data,
+          });
         }
 
-        selectedQuestion.docId =
-            await FirestoreController.createLobbyQuestion(selectedQuestion);
-
-        selectedQuestions.add(selectedQuestion.docId!);
+        selectedQuestions.add({
+          "answer": selectedQuestion.answer,
+          "category": selectedQuestion.category,
+          "info": selectedQuestion.info,
+          "fields": selectedFields,
+        });
       }
+
+      List<dynamic> players = [
+        {
+          "name": playerName,
+          "id": playerId,
+          "score": 0,
+        }
+      ];
 
       Lobby lobby = Lobby(
         category: state.widget.category.name,
@@ -154,12 +170,18 @@ class _Controller {
         id: playerId,
         name: lobbyName!,
         open: true,
-        players: [playerId],
+        players: players,
         questions: selectedQuestions,
         timestamp: DateTime.now().millisecondsSinceEpoch,
       );
 
       lobby.docId = await FirestoreController.createLobby(lobby);
+
+      await Navigator.pushNamed(
+        state.context,
+        LobbyScreen.routeName,
+        arguments: lobby,
+      );
     } catch (e) {
       print('======== Error creating lobby: $e');
     }

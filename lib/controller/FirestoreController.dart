@@ -71,4 +71,16 @@ class FirestoreController {
         .add(lobby.toFirestoreDoc());
     return reference.id;
   }
+
+  static Future<void> updateLobby(
+      {required String docId, required Map<String, dynamic> updateInfo}) async {
+    await FirebaseFirestore.instance
+        .collection(Constant.LOBBY_COLLECTION)
+        .doc(docId)
+        .update(updateInfo);
+  }
+
+  static Future<void> deleteLobby({required String docId}) async {
+    await FirebaseFirestore.instance.collection(Constant.LOBBY_COLLECTION).doc(docId).delete();
+  }
 }
