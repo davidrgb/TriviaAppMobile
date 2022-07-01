@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:trivia_app/model/constant.dart';
 import 'package:trivia_app/model/category.dart';
+import 'package:trivia_app/model/field.dart';
+import 'package:trivia_app/model/lobby.dart';
+import 'package:trivia_app/model/question.dart';
 
 class FirestoreController {
   static Future<List<Category>> getCategories() async {
@@ -19,5 +22,53 @@ class FirestoreController {
       }
     });
     return result;
+  }
+
+  static Future<List<Question>> getQuestionsFromCategory(
+      String category) async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection(Constant.QUESTION_COLLECTION)
+        .where(Question.CATEGORY, isEqualTo: category)
+        .get();
+    var result = <Question>[];
+    querySnapshot.docs.forEach((doc) {
+      var document = doc.data() as Map<String, dynamic>;
+      var q = Question.fromFirestoreDoc(doc: document, docId: doc.id);
+      if (q != null) {
+        result.add(q);
+      }
+    });
+    return result;
+  }
+
+  static Future<Field> getFieldFromDocId(String docId) async {
+    var reference = await FirebaseFirestore.instance
+        .collection(Constant.FIELD_COLLECTION)
+        .doc(docId)
+        .get();
+    var document = reference.data() as Map<String, dynamic>;
+    var f = Field.fromFirestoreDoc(doc: document, docId: docId);
+    return f!;
+  }
+
+  static Future<String> createLobbyQuestion(Question question) async {
+    DocumentReference reference = await FirebaseFirestore.instance
+        .collection(Constant.LOBBY_QUESTION_COLLECTION)
+        .add(question.toFirestoreDoc());
+    return reference.id;
+  }
+
+  static Future<String> createLobbyField(Field field) async {
+    DocumentReference reference = await FirebaseFirestore.instance
+        .collection(Constant.LOBBY_FIELD_COLLECTION)
+        .add(field.toFirestoreDoc());
+    return reference.id;
+  }
+
+  static Future<String> createLobby(Lobby lobby) async {
+    DocumentReference reference = await FirebaseFirestore.instance
+        .collection(Constant.LOBBY_COLLECTION)
+        .add(lobby.toFirestoreDoc());
+    return reference.id;
   }
 }
