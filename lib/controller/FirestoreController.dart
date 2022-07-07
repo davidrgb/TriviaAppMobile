@@ -4,7 +4,7 @@ import 'package:trivia_app/model/category.dart';
 import 'package:trivia_app/model/field.dart';
 import 'package:trivia_app/model/lobby.dart';
 import 'package:trivia_app/model/question.dart';
-import 'package:trivia_app/viewscreen/GameScreen.dart';
+import 'package:trivia_app/viewscreen/game_screen.dart';
 import 'package:trivia_app/viewscreen/lobby_screen.dart';
 
 class FirestoreController {

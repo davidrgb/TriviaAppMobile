@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -6,6 +7,8 @@ import 'package:trivia_app/model/constant.dart';
 import 'package:trivia_app/model/lobby.dart';
 import 'package:trivia_app/model/player.dart';
 import 'package:trivia_app/viewscreen/lobby_screen.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class JoinScreen extends StatefulWidget {
   static const routeName = '/joinScreen';
@@ -28,37 +31,40 @@ class _JoinScreenState extends State<JoinScreen> {
   void initState() {
     super.initState();
     controller = _Controller(this);
-    controller.refresh();
+    //controller.refresh();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Join a Lobby'),
-      ),
-      body: Container(
-        width: MediaQuery.of(context).size.width,
-        padding: const EdgeInsets.all(10),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Form(
-                key: playerNameKey,
-                child: TextFormField(
-                  decoration: const InputDecoration(hintText: 'Your Name'),
-                  keyboardType: TextInputType.name,
-                  autocorrect: false,
-                  validator: controller.validatePlayerName,
-                  onSaved: controller.savePlayerName,
+    return WillPopScope(
+      onWillPop: () => controller.exit(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Join a Lobby'),
+        ),
+        body: Container(
+          width: MediaQuery.of(context).size.width,
+          padding: const EdgeInsets.all(10),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Form(
+                  key: playerNameKey,
+                  child: TextFormField(
+                    decoration: const InputDecoration(hintText: 'Your Name'),
+                    keyboardType: TextInputType.name,
+                    autocorrect: false,
+                    validator: controller.validatePlayerName,
+                    onSaved: controller.savePlayerName,
+                  ),
                 ),
-              ),
-              for (int i = 0; i < lobbies.length; i++)
-                ElevatedButton(
-                  onPressed: () => controller.joinLobby(lobbies[i]),
-                  child: Text(lobbies[i].name + ' | ' + lobbies[i].category),
-                ),
-            ],
+                for (int i = 0; i < lobbies.length; i++)
+                  ElevatedButton(
+                    onPressed: () => controller.joinLobby(lobbies[i]),
+                    child: Text(lobbies[i].name + ' | ' + lobbies[i].category),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -68,7 +74,20 @@ class _JoinScreenState extends State<JoinScreen> {
 
 class _Controller {
   late _JoinScreenState state;
-  _Controller(this.state);
+  late StreamSubscription<QuerySnapshot<Map<String, dynamic>>> listener;
+  
+  _Controller(this.state) {
+    final reference = FirebaseFirestore.instance.collection(Constant.LOBBY_COLLECTION);
+    listener = reference.snapshots().listen((event) {
+      state.lobbies.clear();
+      for (var doc in event.docs) {
+        var document = doc.data() as Map<String, dynamic>;
+        var l = Lobby.fromFirestoreDoc(doc: document, docId: doc.id);
+        if (l != null) state.lobbies.add(l);
+      }
+      state.render((){});
+    });
+  }
 
   String? playerName;
 
@@ -92,6 +111,7 @@ class _Controller {
   }
 
   void joinLobby(Lobby lobby) async {
+    listener.cancel();
     FormState? currentState = state.playerNameKey.currentState;
     if (currentState == null || !currentState.validate()) return;
     currentState.save();
@@ -117,5 +137,10 @@ class _Controller {
         ARGS.PLAYER: player,
       },
     );
+  }
+
+  Future<bool> exit() async {
+    listener.cancel();
+    return true;
   }
 }

@@ -1,16 +1,12 @@
 import 'dart:async';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:trivia_app/controller/FirestoreController.dart';
 import 'package:trivia_app/model/constant.dart';
 import 'package:trivia_app/model/lobby.dart';
-import 'package:trivia_app/model/field.dart';
 import 'package:trivia_app/model/player.dart';
-import 'package:trivia_app/model/question.dart';
-import 'package:trivia_app/viewscreen/GameScreen.dart';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:trivia_app/viewscreen/home_screen.dart';
+import 'package:trivia_app/viewscreen/game_screen.dart';
+import 'package:trivia_app/viewscreen/join_screen.dart';
 
 class LobbyScreen extends StatefulWidget {
   static const routeName = 'lobbyScreen';
@@ -102,6 +98,7 @@ class _Controller {
   }
 
   Future<bool> leaveLobby() async {
+    listener.cancel();
     if (state.widget.lobby.id == state.widget.player.id) {
       await FirestoreController.deleteLobby(docId: state.widget.lobby.docId!);
     }
@@ -119,9 +116,10 @@ class _Controller {
   }
 
   Future<void> leaveOnDeletion() async {
+    listener.cancel();
     Navigator.pushNamed(
       state.context,
-      HomeScreen.routeName,
+      JoinScreen.routeName,
     );
   }
 }

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:trivia_app/model/field.dart';
 import 'package:trivia_app/model/lobby.dart';
 import 'package:trivia_app/model/player.dart';
-import 'package:trivia_app/model/question.dart';
 
 class GameScreen extends StatefulWidget {
   static const routeName = 'gameScreen';
