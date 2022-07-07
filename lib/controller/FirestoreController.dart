@@ -4,6 +4,8 @@ import 'package:trivia_app/model/category.dart';
 import 'package:trivia_app/model/field.dart';
 import 'package:trivia_app/model/lobby.dart';
 import 'package:trivia_app/model/question.dart';
+import 'package:trivia_app/viewscreen/GameScreen.dart';
+import 'package:trivia_app/viewscreen/lobby_screen.dart';
 
 class FirestoreController {
   static Future<List<Category>> getCategories() async {
@@ -72,6 +74,21 @@ class FirestoreController {
     return reference.id;
   }
 
+  static Future<List<Lobby>> readLobbies() async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection(Constant.LOBBY_COLLECTION)
+        .get();
+    var result = <Lobby>[];
+    querySnapshot.docs.forEach((doc) {
+      var document = doc.data() as Map<String, dynamic>;
+      var l = Lobby.fromFirestoreDoc(doc: document, docId: doc.id);
+      if (l != null) {
+        result.add(l);
+      }
+    });
+    return result;
+  }
+
   static Future<void> updateLobby(
       {required String docId, required Map<String, dynamic> updateInfo}) async {
     await FirebaseFirestore.instance
@@ -82,5 +99,25 @@ class FirestoreController {
 
   static Future<void> deleteLobby({required String docId}) async {
     await FirebaseFirestore.instance.collection(Constant.LOBBY_COLLECTION).doc(docId).delete();
+  }
+
+  static Future<void> listenToLobbyInLobby({required LobbyScreen screen}) async {
+    final reference = FirebaseFirestore.instance.collection(Constant.LOBBY_COLLECTION).doc(screen.lobby.docId);
+    reference.snapshots().listen((event) {
+      var document = event.data() as Map<String, dynamic>;
+      print(event.data());
+      var l = Lobby.fromFirestoreDoc(doc: document, docId: event.id);
+      if (l != null) screen.lobby.setProperties(l);
+    });
+  }
+
+  static Future<void> listenToLobbyInGame({required GameScreen screen}) async {
+    final reference = FirebaseFirestore.instance.collection(Constant.LOBBY_COLLECTION).doc(screen.lobby.docId);
+    reference.snapshots().listen((event) {
+      var document = event.data() as Map<String, dynamic>;
+      print(event.data());
+      var l = Lobby.fromFirestoreDoc(doc: document, docId: event.id);
+      if (l != null) screen.lobby.setProperties(l);
+    });
   }
 }

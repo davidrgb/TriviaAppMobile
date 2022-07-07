@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:trivia_app/controller/FirestoreController.dart';
 import 'package:trivia_app/model/category.dart';
 import 'package:trivia_app/viewscreen/category_screen.dart';
+import 'package:trivia_app/viewscreen/join_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   static const routeName = '/homeScreen';
@@ -35,11 +36,11 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                onPressed: controller.create_lobby,
+                onPressed: controller.createLobby,
                 child: Text('Create Lobby'),
               ),
               ElevatedButton(
-                onPressed: controller.join_lobby,
+                onPressed: controller.joinLobby,
                 child: Text('Join Lobby'),
               ),
             ],
@@ -54,7 +55,7 @@ class _Controller {
   late _HomeScreenState state;
   _Controller(this.state);
 
-  void create_lobby() async {
+  void createLobby() async {
     List<Category> categories = await FirestoreController.getCategories();
     await Navigator.pushNamed(
       state.context,
@@ -63,5 +64,10 @@ class _Controller {
     );
   }
 
-  void join_lobby() async {}
+  void joinLobby() async {
+    await Navigator.pushNamed(
+      state.context,
+      JoinScreen.routeName,
+    );
+  }
 }

@@ -12,4 +12,6 @@ enum ARGS {
   LOBBY,
   QUESTIONS,
   FIELDS,
+  PLAYER,
+  REFERENCE,
 }

@@ -8,6 +8,7 @@ import 'package:trivia_app/viewscreen/GameScreen.dart';
 import 'package:trivia_app/viewscreen/category_screen.dart';
 import 'package:trivia_app/viewscreen/create_screen.dart';
 import 'package:trivia_app/viewscreen/home_screen.dart';
+import 'package:trivia_app/viewscreen/join_screen.dart';
 import 'package:trivia_app/viewscreen/lobby_screen.dart';
 
 import 'firebase_options.dart';
@@ -47,13 +48,20 @@ class TriviaApp extends StatelessWidget {
           Object? args = ModalRoute.of(context)?.settings.arguments;
           return CreateScreen(args as Category);
         },
+        JoinScreen.routeName: (BuildContext context) => const JoinScreen(),
         LobbyScreen.routeName: (BuildContext context) {
           Object? args = ModalRoute.of(context)?.settings.arguments;
-          return LobbyScreen(args as Lobby);
+          var arguments = args as Map;
+          var lobby = arguments[ARGS.LOBBY];
+          var player = arguments[ARGS.PLAYER];
+          return LobbyScreen(lobby, player);
         },
         GameScreen.routeName: (BuildContext context) {
           Object? args = ModalRoute.of(context)?.settings.arguments;
-          return GameScreen(args as Lobby);
+          var arguments = args as Map;
+          var lobby = arguments[ARGS.LOBBY];
+          var player = arguments[ARGS.PLAYER];
+          return GameScreen(lobby, player);
         },
       },
     );

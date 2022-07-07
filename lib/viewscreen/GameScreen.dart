@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:trivia_app/model/field.dart';
 import 'package:trivia_app/model/lobby.dart';
+import 'package:trivia_app/model/player.dart';
 import 'package:trivia_app/model/question.dart';
 
 class GameScreen extends StatefulWidget {
   static const routeName = 'gameScreen';
 
-  const GameScreen(this.lobby, {Key? key}) : super(key: key);
+  const GameScreen(this.lobby, this.player, {Key? key}) : super(key: key);
 
   final Lobby lobby;
+  final Player player;
 
   @override
   State<StatefulWidget> createState() => _GameScreenState();

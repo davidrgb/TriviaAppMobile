@@ -7,6 +7,7 @@ import 'package:trivia_app/model/field.dart';
 import 'dart:math';
 
 import 'package:trivia_app/model/lobby.dart';
+import 'package:trivia_app/model/player.dart';
 import 'package:trivia_app/model/question.dart';
 import 'package:trivia_app/viewscreen/lobby_screen.dart';
 
@@ -156,12 +157,14 @@ class _Controller {
         });
       }
 
+      Player player = Player(
+        name: playerName!,
+        id: playerId,
+        score: 0,
+      );
+
       List<dynamic> players = [
-        {
-          "name": playerName,
-          "id": playerId,
-          "score": 0,
-        }
+        player.toFirestoreDoc(),
       ];
 
       Lobby lobby = Lobby(
@@ -180,7 +183,10 @@ class _Controller {
       await Navigator.pushNamed(
         state.context,
         LobbyScreen.routeName,
-        arguments: lobby,
+        arguments: {
+          ARGS.LOBBY: lobby,
+          ARGS.PLAYER: player,
+        },
       );
     } catch (e) {
       print('======== Error creating lobby: $e');

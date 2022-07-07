@@ -33,6 +33,17 @@ class Lobby {
     this.questions = [...questions];
   }
 
+  void setProperties(Lobby l) {
+    this.docId = l.docId;
+    this.category = l.category;
+    this.host = l.host;
+    this.name = l.name;
+    this.open = l.open;
+    this.players = [...l.players];
+    this.questions = [...l.questions];
+    this.timestamp = l.timestamp;
+  }
+
   Map<String, dynamic> toFirestoreDoc() {
     return {
       CATEGORY: category,
