@@ -108,6 +108,7 @@ class _Controller {
     listener.cancel();
     if (state.widget.lobby.id == state.widget.player.id) {
       await FirestoreController.deleteLobby(docId: state.widget.lobby.docId!);
+      return true;
     } else {
       Map<String, dynamic> updateInfo = {};
       var players = [];
@@ -118,8 +119,12 @@ class _Controller {
       updateInfo[Lobby.PLAYERS] = players;
       await FirestoreController.updateLobby(
           docId: state.widget.lobby.docId!, updateInfo: updateInfo);
+      await Navigator.pushNamed(
+        state.context,
+        HomeScreen.routeName,
+      );
+      return false;
     }
-    return true;
   }
 
   Future<void> leaveOnDeletion() async {
