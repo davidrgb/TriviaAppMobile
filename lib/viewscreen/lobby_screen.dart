@@ -36,7 +36,11 @@ class _LobbyScreenState extends State<LobbyScreen> {
     return WillPopScope(
       onWillPop: () => controller.leaveLobby(),
       child: Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          title: widget.lobby.id.compareTo(widget.player.id) == 0
+              ? const Text('Press Start when ready')
+              : const Text('Waiting for host to start'),
+        ),
         body: Container(
           width: MediaQuery.of(context).size.width,
           padding: const EdgeInsets.all(10),
@@ -45,10 +49,14 @@ class _LobbyScreenState extends State<LobbyScreen> {
               children: [
                 for (int i = 0; i < widget.lobby.players.length; i++)
                   Text(widget.lobby.players[i]['name']),
-                ElevatedButton(
-                  onPressed: controller.start_lobby,
-                  child: Text('Start'),
-                ),
+                widget.lobby.id.compareTo(widget.player.id) == 0
+                    ? ElevatedButton(
+                        onPressed: controller.start_lobby,
+                        child: const Text('Start'),
+                      )
+                    : const SizedBox(
+                        height: 1,
+                      ),
               ],
             ),
           ),
@@ -63,16 +71,17 @@ class _Controller {
   late StreamSubscription<DocumentSnapshot<Map<String, dynamic>>> listener;
 
   _Controller(this.state) {
-    final reference = FirebaseFirestore.instance.collection(Constant.LOBBY_COLLECTION).doc(state.widget.lobby.docId);
+    final reference = FirebaseFirestore.instance
+        .collection(Constant.LOBBY_COLLECTION)
+        .doc(state.widget.lobby.docId);
     listener = reference.snapshots().listen((event) {
       if (event.data() == null) {
         leaveOnDeletion();
-      }
-      else {
+      } else {
         var document = event.data() as Map<String, dynamic>;
         var l = Lobby.fromFirestoreDoc(doc: document, docId: event.id);
         if (l != null) state.widget.lobby.setProperties(l);
-        state.render((){});
+        state.render(() {});
         if (state.widget.lobby.open == false) enter_game();
       }
     });
@@ -88,26 +97,22 @@ class _Controller {
 
   void enter_game() async {
     listener.cancel();
-    await Navigator.pushNamed(
-      state.context,
-      GameScreen.routeName,
-      arguments: {
-        ARGS.LOBBY: state.widget.lobby,
-        ARGS.PLAYER: state.widget.player,
-      }
-    );
+    await Navigator.pushNamed(state.context, GameScreen.routeName, arguments: {
+      ARGS.LOBBY: state.widget.lobby,
+      ARGS.PLAYER: state.widget.player,
+    });
   }
 
   Future<bool> leaveLobby() async {
     listener.cancel();
     if (state.widget.lobby.id == state.widget.player.id) {
       await FirestoreController.deleteLobby(docId: state.widget.lobby.docId!);
-    }
-    else {
+    } else {
       Map<String, dynamic> updateInfo = {};
       var players = [];
       for (var i = 0; i < state.widget.lobby.players.length; i++) {
-        if (state.widget.lobby.players[i]['id'] != state.widget.player.id) players.add(state.widget.lobby.players[i]);
+        if (state.widget.lobby.players[i]['id'] != state.widget.player.id)
+          players.add(state.widget.lobby.players[i]);
       }
       updateInfo[Lobby.PLAYERS] = players;
       await FirestoreController.updateLobby(

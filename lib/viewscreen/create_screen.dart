@@ -125,7 +125,7 @@ class _Controller {
           await FirestoreController.getQuestionsFromCategory(
               state.widget.category.name);
       List<dynamic> selectedQuestions = [];
-      for (int i = 0; i < 1; i++) {
+      for (int i = 0; i < 3; i++) {
         int index = rng.nextInt(questions.length);
         Question selectedQuestion = questions[index];
         List<Field> fields = [];
@@ -139,8 +139,8 @@ class _Controller {
         List<dynamic> selectedFields = [];
         for (var field in fields) {
           while (field.data.length > 5) {
-            int index = rng.nextInt(field.data.length);
-            field.data.removeAt(index);
+            int ind = rng.nextInt(field.data.length);
+            field.data.removeAt(ind);
           }
           /*var data = {
             "data": field.data,
@@ -166,6 +166,7 @@ class _Controller {
           "info": selectedQuestion.info,
           "fields": selectedFields,
         });
+        questions.removeAt(index);
       }
 
       Player player = Player(

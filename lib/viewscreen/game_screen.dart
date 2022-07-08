@@ -50,7 +50,9 @@ class _GameScreenState extends State<GameScreen> {
                   ? const Text('Reveal a tile')
                   : const Text('Waiting for another player')
               : widget.lobby.state == 1
-                  ? const Text('Guess')
+                  ? controller.answer.isEmpty
+                      ? const Text('Guess')
+                      : const Text('Waiting for another player')
                   : widget.lobby.state == 2
                       ? const Text('Get ready for the next question')
                       : const Text('Game Over')),
@@ -72,9 +74,7 @@ class _GameScreenState extends State<GameScreen> {
                         widget.lobby.questions[0]['info'],
                         style: const TextStyle(fontSize: 24),
                       ),
-                      widget.lobby.state == 1 &&
-                              (controller.answer == null ||
-                                  controller.answer.length < 1)
+                      widget.lobby.state == 1 && (controller.answer.isEmpty)
                           ? Form(
                               key: answerKey,
                               child: Padding(
@@ -85,7 +85,7 @@ class _GameScreenState extends State<GameScreen> {
                                   keyboardType: TextInputType.name,
                                   autocorrect: false,
                                   onFieldSubmitted: (value) {
-                                    controller.guess_answer();
+                                    controller.guessAnswer();
                                   },
                                   validator: controller.validateAnswer,
                                   onSaved: controller.saveAnswer,
@@ -103,17 +103,20 @@ class _GameScreenState extends State<GameScreen> {
                             for (int i = 0;
                                 i < widget.lobby.players.length;
                                 i++)
-                              ElevatedButton(
-                                onPressed: () {},
-                                style: ElevatedButton.styleFrom(
-                                  primary: widget.lobby.playerIndex %
-                                              widget.lobby.players.length ==
-                                          i
-                                      ? Colors.red
-                                      : Colors.grey,
+                              Padding(
+                                padding: const EdgeInsets.only(right: 5),
+                                child: ElevatedButton(
+                                  onPressed: () {},
+                                  style: ElevatedButton.styleFrom(
+                                    primary: widget.lobby.playerIndex %
+                                                widget.lobby.players.length ==
+                                            i
+                                        ? Colors.red
+                                        : Colors.grey,
+                                  ),
+                                  child: Text(
+                                      '${widget.lobby.players[i]['name']}: ${widget.lobby.players[i]['score']}'),
                                 ),
-                                child: Text(
-                                    '${widget.lobby.players[i]['name']}: ${widget.lobby.players[i]['score']}'),
                               ),
                           ],
                         ),
@@ -144,7 +147,7 @@ class _GameScreenState extends State<GameScreen> {
                                             ['data'][j]['revealed'] ||
                                         widget.lobby.state != 0
                                     ? () {}
-                                    : () => {controller.reveal_tile(i, j)},
+                                    : () => {controller.revealTile(i, j)},
                                 child: Text(
                                   widget.lobby.questions[0]['fields'][i]['data']
                                           [j]['revealed']
@@ -216,14 +219,14 @@ class _Controller {
       var l = Lobby.fromFirestoreDoc(doc: document, docId: event.id);
       if (l != null) state.widget.lobby.setProperties(l);
       if (state.widget.lobby.state == 0) {
-        lastQuestionAnswer = state.widget.lobby.questions[0]['answer'];
         if (answer.isNotEmpty) {
+          String storedAnswer = answer;
           showDialog(
               context: state.context,
               builder: (BuildContext context) {
                 return _popupDialog(
                     context,
-                    answer
+                    storedAnswer
                             .toLowerCase()
                             .compareTo(lastQuestionAnswer.toLowerCase()) ==
                         0,
@@ -233,14 +236,18 @@ class _Controller {
         }
         answer = "";
       }
+      if (state.widget.lobby.state == 1) {
+        lastQuestionAnswer = state.widget.lobby.questions[0]['answer'];
+      }
       if (state.widget.lobby.state == 2) {
+        String storedAnswer = answer;
         if (answer.isNotEmpty) {
           showDialog(
               context: state.context,
               builder: (BuildContext context) {
                 return _popupDialog(
                     context,
-                    answer
+                    storedAnswer
                             .toLowerCase()
                             .compareTo(lastQuestionAnswer.toLowerCase()) ==
                         0,
@@ -248,6 +255,7 @@ class _Controller {
                     lastQuestionAnswer);
               });
         }
+        answer = "";
       }
       if (state.widget.player.id.compareTo(state.widget.lobby.id) == 0 &&
           state.widget.lobby.state == 1 &&
@@ -314,7 +322,7 @@ class _Controller {
     });
   }
 
-  void reveal_tile(field, data) async {
+  void revealTile(field, data) async {
     Map<String, dynamic> updateInfo = {};
     state.widget.lobby.questions[0]['fields'][field]['data'][data]['revealed'] =
         true;
@@ -326,7 +334,7 @@ class _Controller {
   }
 
   String? validateAnswer(String? value) {
-    if (value == null || value.length < 1) {
+    if (value == null || value.isEmpty) {
       return 'Please enter an answer';
     } else {
       return null;
@@ -337,7 +345,7 @@ class _Controller {
     if (value != null) answer = value;
   }
 
-  void guess_answer() async {
+  void guessAnswer() async {
     FormState? currentState = state.answerKey.currentState;
     if (currentState == null || !currentState.validate()) return;
 
