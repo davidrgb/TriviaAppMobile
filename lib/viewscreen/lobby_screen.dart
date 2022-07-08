@@ -49,13 +49,15 @@ class _LobbyScreenState extends State<LobbyScreen> {
             child: Column(
               children: [
                 for (int i = 0; i < widget.lobby.players.length; i++)
-                  Text(widget.lobby.players[i]['name']),
+                  Text(
+                    widget.lobby.players[i]['name'],
+                    style: const TextStyle(fontSize: 24),
+                  ),
                 widget.lobby.id.compareTo(widget.player.id) == 0
                     ? ElevatedButton(
                         onPressed: controller.start_lobby,
                         child: const Text(
                           'Start',
-                          style: TextStyle(fontSize: 24),
                         ),
                       )
                     : const SizedBox(
