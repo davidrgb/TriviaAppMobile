@@ -6,6 +6,7 @@ import 'package:trivia_app/model/constant.dart';
 import 'package:trivia_app/model/lobby.dart';
 import 'package:trivia_app/model/player.dart';
 import 'package:trivia_app/viewscreen/game_screen.dart';
+import 'package:trivia_app/viewscreen/home_screen.dart';
 import 'package:trivia_app/viewscreen/join_screen.dart';
 
 class LobbyScreen extends StatefulWidget {
@@ -125,7 +126,7 @@ class _Controller {
     listener.cancel();
     Navigator.pushNamed(
       state.context,
-      JoinScreen.routeName,
+      HomeScreen.routeName,
     );
   }
 }
