@@ -53,7 +53,10 @@ class _LobbyScreenState extends State<LobbyScreen> {
                 widget.lobby.id.compareTo(widget.player.id) == 0
                     ? ElevatedButton(
                         onPressed: controller.start_lobby,
-                        child: const Text('Start'),
+                        child: const Text(
+                          'Start',
+                          style: TextStyle(fontSize: 24),
+                        ),
                       )
                     : const SizedBox(
                         height: 1,

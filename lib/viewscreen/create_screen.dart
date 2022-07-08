@@ -125,7 +125,7 @@ class _Controller {
           await FirestoreController.getQuestionsFromCategory(
               state.widget.category.name);
       List<dynamic> selectedQuestions = [];
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < 10 && questions.isNotEmpty; i++) {
         int index = rng.nextInt(questions.length);
         Question selectedQuestion = questions[index];
         List<Field> fields = [];
@@ -142,10 +142,6 @@ class _Controller {
             int ind = rng.nextInt(field.data.length);
             field.data.removeAt(ind);
           }
-          /*var data = {
-            "data": field.data,
-            "revealed": false,
-          };*/
           List<dynamic> dataObject = [];
           for (var data in field.data) {
             dataObject.add({
