@@ -31,7 +31,6 @@ class _JoinScreenState extends State<JoinScreen> {
   void initState() {
     super.initState();
     controller = _Controller(this);
-    //controller.refresh();
   }
 
   @override
@@ -83,18 +82,13 @@ class _Controller {
       for (var doc in event.docs) {
         var document = doc.data() as Map<String, dynamic>;
         var l = Lobby.fromFirestoreDoc(doc: document, docId: doc.id);
-        if (l != null) state.lobbies.add(l);
+        if (l != null && l.open == true) state.lobbies.add(l);
       }
       state.render((){});
     });
   }
 
   String? playerName;
-
-  void refresh() async {
-    state.lobbies = await FirestoreController.readLobbies();
-    state.render(() {});
-  }
 
   String? validatePlayerName(String? value) {
     if (value == null || value.isEmpty) {

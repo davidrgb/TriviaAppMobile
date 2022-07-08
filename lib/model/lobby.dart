@@ -7,6 +7,9 @@ class Lobby {
   static const PLAYERS = 'players';
   static const QUESTIONS = 'questions';
   static const TIMESTAMP = 'timestamp';
+  static const ANSWERS = 'answers';
+  static const STATE = 'state';
+  static const PLAYER_INDEX = 'playerindex';
 
   String? docId;
   late String category;
@@ -17,6 +20,9 @@ class Lobby {
   late List<dynamic> players;
   late List<dynamic> questions;
   int? timestamp;
+  late List<dynamic> answers;
+  late int state;
+  late int playerIndex;
 
   Lobby({
     this.docId,
@@ -28,9 +34,13 @@ class Lobby {
     required List<dynamic> players,
     required List<dynamic> questions,
     this.timestamp,
+    required List<dynamic> answers,
+    required this.state,
+    required this.playerIndex,
   }) {
     this.players = [...players];
     this.questions = [...questions];
+    this.answers = [...answers];
   }
 
   void setProperties(Lobby l) {
@@ -42,6 +52,9 @@ class Lobby {
     this.players = [...l.players];
     this.questions = [...l.questions];
     this.timestamp = l.timestamp;
+    this.answers = [...l.answers];
+    this.state = l.state;
+    this.playerIndex = l.playerIndex;
   }
 
   Map<String, dynamic> toFirestoreDoc() {
@@ -54,6 +67,9 @@ class Lobby {
       PLAYERS: players,
       QUESTIONS: questions,
       TIMESTAMP: timestamp,
+      ANSWERS: answers,
+      STATE: state,
+      PLAYER_INDEX: playerIndex,
     };
   }
 
@@ -73,6 +89,9 @@ class Lobby {
           players: doc[PLAYERS],
           questions: doc[QUESTIONS],
           timestamp: doc[TIMESTAMP],
+          answers: doc[ANSWERS],
+          state: doc[STATE],
+          playerIndex: doc[PLAYER_INDEX],
         );
       }
 }

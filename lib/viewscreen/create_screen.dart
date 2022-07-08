@@ -142,10 +142,21 @@ class _Controller {
             int index = rng.nextInt(field.data.length);
             field.data.removeAt(index);
           }
+          /*var data = {
+            "data": field.data,
+            "revealed": false,
+          };*/
+          List<dynamic> dataObject = [];
+          for (var data in field.data) {
+            dataObject.add({
+              "data": data,
+              "revealed": false,
+            });
+          }
           field.data.shuffle();
           selectedFields.add({
             "name": field.name,
-            "data": field.data,
+            "data": dataObject,
           });
         }
 
@@ -176,6 +187,9 @@ class _Controller {
         players: players,
         questions: selectedQuestions,
         timestamp: DateTime.now().millisecondsSinceEpoch,
+        answers: [],
+        state: 0,
+        playerIndex: 0,
       );
 
       lobby.docId = await FirestoreController.createLobby(lobby);

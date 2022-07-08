@@ -73,6 +73,7 @@ class _Controller {
         var l = Lobby.fromFirestoreDoc(doc: document, docId: event.id);
         if (l != null) state.widget.lobby.setProperties(l);
         state.render((){});
+        if (state.widget.lobby.open == false) enter_game();
       }
     });
   }
