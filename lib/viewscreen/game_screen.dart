@@ -78,10 +78,10 @@ class _GameScreenState extends State<GameScreen> {
                           ? Form(
                               key: answerKey,
                               child: Padding(
-                                padding: EdgeInsets.only(bottom: 30),
+                                padding: const EdgeInsets.only(bottom: 30),
                                 child: TextFormField(
-                                  decoration:
-                                      InputDecoration(hintText: 'What is it?'),
+                                  decoration: const InputDecoration(
+                                      hintText: 'What is it?'),
                                   keyboardType: TextInputType.name,
                                   autocorrect: false,
                                   onFieldSubmitted: (value) {
@@ -183,10 +183,29 @@ class _GameScreenState extends State<GameScreen> {
   }
 }
 
+AlertDialog _popupDialog(
+    BuildContext context, bool correct, bool over, String answer) {
+  return AlertDialog(
+      title: correct
+          ? const Text('Correct!')
+          : over
+              ? const Text('Better luck next time')
+              : const Text('No one got the answer'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          over
+              ? Text('The answer is $answer')
+              : const Text('You have another chance')
+        ],
+      ));
+}
+
 class _Controller {
   late _GameScreenState state;
   late StreamSubscription<DocumentSnapshot<Map<String, dynamic>>> listener;
   String answer = "";
+  String lastQuestionAnswer = "";
 
   _Controller(this.state) {
     final reference = FirebaseFirestore.instance
@@ -197,7 +216,38 @@ class _Controller {
       var l = Lobby.fromFirestoreDoc(doc: document, docId: event.id);
       if (l != null) state.widget.lobby.setProperties(l);
       if (state.widget.lobby.state == 0) {
+        lastQuestionAnswer = state.widget.lobby.questions[0]['answer'];
+        if (answer.isNotEmpty) {
+          showDialog(
+              context: state.context,
+              builder: (BuildContext context) {
+                return _popupDialog(
+                    context,
+                    answer
+                            .toLowerCase()
+                            .compareTo(lastQuestionAnswer.toLowerCase()) ==
+                        0,
+                    false,
+                    lastQuestionAnswer);
+              });
+        }
         answer = "";
+      }
+      if (state.widget.lobby.state == 2) {
+        if (answer.isNotEmpty) {
+          showDialog(
+              context: state.context,
+              builder: (BuildContext context) {
+                return _popupDialog(
+                    context,
+                    answer
+                            .toLowerCase()
+                            .compareTo(lastQuestionAnswer.toLowerCase()) ==
+                        0,
+                    true,
+                    lastQuestionAnswer);
+              });
+        }
       }
       if (state.widget.player.id.compareTo(state.widget.lobby.id) == 0 &&
           state.widget.lobby.state == 1 &&
@@ -256,7 +306,8 @@ class _Controller {
         FirestoreController.updateLobby(
             docId: state.widget.lobby.docId!, updateInfo: updateInfo);
       } else if (state.widget.lobby.state == 3) {
-        state.widget.lobby.players.sort((a, b) => b['score'].compareTo(a['score']));
+        state.widget.lobby.players
+            .sort((a, b) => b['score'].compareTo(a['score']));
         listener.cancel();
       }
       state.render(() {});
