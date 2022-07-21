@@ -23,6 +23,7 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   late _Controller controller;
+  List<bool> playerAnswers = [];
 
   GlobalKey<FormState> answerKey = GlobalKey<FormState>();
 
@@ -56,6 +57,20 @@ class _GameScreenState extends State<GameScreen> {
                   : widget.lobby.state == 2
                       ? const Text('Get ready for the next question')
                       : const Text('Game Over')),
+          actions: [
+            IconButton(
+              onPressed: () {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return _helpDialog(
+                        context,
+                      );
+                    });
+              },
+              icon: const Icon(Icons.question_mark),
+            ),
+          ],
         ),
         body: Container(
           width: MediaQuery.of(context).size.width,
@@ -128,7 +143,7 @@ class _GameScreenState extends State<GameScreen> {
                                 child: ElevatedButton(
                                   onPressed: () {},
                                   style: ElevatedButton.styleFrom(
-                                    primary: widget.lobby.playerIndex %
+                                    primary: widget.lobby.state == 1 ? playerAnswers[i] ? Colors.red : Colors.orange : widget.lobby.playerIndex %
                                                 widget.lobby.players.length ==
                                             i
                                         ? Colors.red
@@ -206,6 +221,26 @@ class _GameScreenState extends State<GameScreen> {
   }
 }
 
+AlertDialog _helpDialog(BuildContext context) {
+  return AlertDialog(
+      title: const Text('How To Play'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+                'The goal of the game is to guess the name of the hidden item based on the information revealed to you.', style: const TextStyle(fontSize: 18),),
+            const SizedBox(height: 10,),
+            const Text(
+                'Each turn, the player highlighted in red on the scrollable scoreboard will pick one hidden piece of information to reveal.', style: const TextStyle(fontSize: 18),),
+            const SizedBox(height: 10,),
+            const Text(
+                'After the player has made their selection, everyone will try to guess the hidden item. Players who have not guessed will appear orange on the scoreboard while players who have guessed will appear red. If anyone gets the answer, they will gain one point and the game will progress to the next question. Otherwise, players continue trying to find the answer to the hidden item until there is no information left to reveal.', style: const TextStyle(fontSize: 18),)
+          ],
+        ),
+      ));
+}
+
 AlertDialog _popupDialog(
     BuildContext context, bool correct, bool over, String answer) {
   return AlertDialog(
@@ -218,8 +253,8 @@ AlertDialog _popupDialog(
         mainAxisSize: MainAxisSize.min,
         children: [
           over
-              ? Text('The answer is $answer')
-              : const Text('You have another chance')
+              ? Text('The answer is $answer', style: const TextStyle(fontSize: 18),)
+              : const Text('You have another chance', style: TextStyle(fontSize: 18),)
         ],
       ));
 }
@@ -239,6 +274,10 @@ class _Controller {
       var l = Lobby.fromFirestoreDoc(doc: document, docId: event.id);
       if (l != null) state.widget.lobby.setProperties(l);
       if (state.widget.lobby.state == 0) {
+        state.playerAnswers.clear();
+        for (int i = 0; i < state.widget.lobby.players.length; i++) {
+          state.playerAnswers.add(false);
+        }
         if (answer.isNotEmpty) {
           String storedAnswer = answer;
           showDialog(
@@ -258,6 +297,13 @@ class _Controller {
       }
       if (state.widget.lobby.state == 1) {
         lastQuestionAnswer = state.widget.lobby.questions[0]['answer'];
+        for (int i = 0; i < state.widget.lobby.players.length; i++) {
+          for (int j = 0; j < state.widget.lobby.answers.length; j++) {
+            if (state.widget.lobby.players[i]['id'].toString().compareTo(state.widget.lobby.answers[j]['id'].toString()) == 0) {
+              state.playerAnswers[i] = true;
+            }
+          }
+        }
       }
       if (state.widget.lobby.state == 2) {
         String storedAnswer = answer;
