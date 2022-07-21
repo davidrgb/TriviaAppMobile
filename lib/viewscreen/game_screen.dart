@@ -78,7 +78,7 @@ class _GameScreenState extends State<GameScreen> {
                           ? Form(
                               key: answerKey,
                               child: Padding(
-                                padding: const EdgeInsets.only(bottom: 30),
+                                padding: const EdgeInsets.only(bottom: 10),
                                 child: TextFormField(
                                   decoration: const InputDecoration(
                                       hintText: 'What is it?'),
@@ -92,6 +92,23 @@ class _GameScreenState extends State<GameScreen> {
                                   autofocus: true,
                                 ),
                               ),
+                            )
+                          : const SizedBox(
+                              height: 1,
+                            ),
+                      widget.lobby.state == 1 && (controller.answer.isEmpty)
+                          ? Row(
+                              children: [
+                                ElevatedButton(
+                                  onPressed: controller.pass,
+                                  child: const Text('Pass'),
+                                ),
+                                const Spacer(),
+                                ElevatedButton(
+                                  onPressed: controller.guessAnswer,
+                                  child: const Text('Submit'),
+                                ),
+                              ],
                             )
                           : const SizedBox(
                               height: 1,
@@ -356,6 +373,19 @@ class _Controller {
     state.widget.lobby.answers.add({
       "id": state.widget.player.id,
       "answer": answer,
+    });
+    updateInfo[Lobby.ANSWERS] = state.widget.lobby.answers;
+    await FirestoreController.updateLobby(
+        docId: state.widget.lobby.docId!, updateInfo: updateInfo);
+  }
+
+  void pass() async {
+    answer = 'null_pass';
+    
+    Map<String, dynamic> updateInfo = {};
+    state.widget.lobby.answers.add({
+      "id": state.widget.player.id,
+      "answer": 'null_pass',
     });
     updateInfo[Lobby.ANSWERS] = state.widget.lobby.answers;
     await FirestoreController.updateLobby(
