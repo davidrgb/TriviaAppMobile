@@ -113,6 +113,9 @@ class _GameScreenState extends State<GameScreen> {
                           : const SizedBox(
                               height: 1,
                             ),
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 30),
+                      ),
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
@@ -381,7 +384,7 @@ class _Controller {
 
   void pass() async {
     answer = 'null_pass';
-    
+
     Map<String, dynamic> updateInfo = {};
     state.widget.lobby.answers.add({
       "id": state.widget.player.id,
