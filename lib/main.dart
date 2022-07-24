@@ -6,6 +6,7 @@ import 'package:trivia_app/model/constant.dart';
 import 'package:trivia_app/viewscreen/game_screen.dart';
 import 'package:trivia_app/viewscreen/category_screen.dart';
 import 'package:trivia_app/viewscreen/create_screen.dart';
+import 'package:trivia_app/viewscreen/hi_lo_screen.dart';
 import 'package:trivia_app/viewscreen/home_screen.dart';
 import 'package:trivia_app/viewscreen/join_screen.dart';
 import 'package:trivia_app/viewscreen/lobby_screen.dart';
@@ -61,6 +62,13 @@ class TriviaApp extends StatelessWidget {
           var lobby = arguments[ARGS.LOBBY];
           var player = arguments[ARGS.PLAYER];
           return GameScreen(lobby, player);
+        },
+        HiLoScreen.routeName: (BuildContext context) {
+          Object? args = ModalRoute.of(context)?.settings.arguments;
+          var arguments = args as Map;
+          var lobby = arguments[ARGS.LOBBY];
+          var player = arguments[ARGS.PLAYER];
+          return HiLoScreen(lobby, player);
         },
       },
     );

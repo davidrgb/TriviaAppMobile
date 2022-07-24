@@ -5,6 +5,8 @@ class Constant {
   static const LOBBY_QUESTION_COLLECTION = 'lobby_questions';
   static const LOBBY_FIELD_COLLECTION = 'lobby_fields';
   static const LOBBY_COLLECTION = 'lobbies';
+
+  static const HI_LO_MOVIES_CATEGORY = 'Hi/Lo Movies';
 }
 
 enum ARGS {

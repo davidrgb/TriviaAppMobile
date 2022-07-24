@@ -6,6 +6,7 @@ import 'package:trivia_app/model/constant.dart';
 import 'package:trivia_app/model/lobby.dart';
 import 'package:trivia_app/model/player.dart';
 import 'package:trivia_app/viewscreen/game_screen.dart';
+import 'package:trivia_app/viewscreen/hi_lo_screen.dart';
 import 'package:trivia_app/viewscreen/home_screen.dart';
 import 'package:trivia_app/viewscreen/join_screen.dart';
 
@@ -103,10 +104,19 @@ class _Controller {
 
   void enter_game() async {
     listener.cancel();
-    await Navigator.pushNamed(state.context, GameScreen.routeName, arguments: {
-      ARGS.LOBBY: state.widget.lobby,
-      ARGS.PLAYER: state.widget.player,
-    });
+    if (state.widget.lobby.category == Constant.HI_LO_MOVIES_CATEGORY) {
+      await Navigator.pushNamed(state.context, HiLoScreen.routeName,
+          arguments: {
+            ARGS.LOBBY: state.widget.lobby,
+            ARGS.PLAYER: state.widget.player,
+          });
+    } else {
+      await Navigator.pushNamed(state.context, GameScreen.routeName,
+          arguments: {
+            ARGS.LOBBY: state.widget.lobby,
+            ARGS.PLAYER: state.widget.player,
+          });
+    }
   }
 
   Future<bool> leaveLobby() async {
