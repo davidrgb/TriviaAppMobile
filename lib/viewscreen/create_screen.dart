@@ -27,6 +27,7 @@ class _CreateScreenState extends State<CreateScreen> {
   GlobalKey<FormState> lobbyNameKey = GlobalKey<FormState>();
 
   late CreateScreen screen;
+  bool showSpinner = false;
 
   void render(fn) => setState(fn);
 
@@ -47,28 +48,39 @@ class _CreateScreenState extends State<CreateScreen> {
         width: MediaQuery.of(context).size.width,
         child: Form(
           key: lobbyNameKey,
-          child: Column(
-            children: [
-              TextFormField(
-                decoration: InputDecoration(hintText: 'Your Name'),
-                keyboardType: TextInputType.name,
-                autocorrect: false,
-                validator: controller.validatePlayerName,
-                onSaved: controller.savePlayerName,
+          child: showSpinner == false
+              ? Column(
+                  children: [
+                    TextFormField(
+                      decoration: InputDecoration(hintText: 'Your Name'),
+                      keyboardType: TextInputType.name,
+                      autocorrect: false,
+                      validator: controller.validatePlayerName,
+                      onSaved: controller.savePlayerName,
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(hintText: 'Lobby Name'),
+                      keyboardType: TextInputType.name,
+                      autocorrect: false,
+                      validator: controller.validateLobbyName,
+                      onSaved: controller.saveLobbyName,
+                    ),
+                    ElevatedButton(
+                      onPressed: controller.create_lobby,
+                      child: Text('Create Lobby'),
+                    ),
+                  ],
+                )
+              : const Center(
+                child: SizedBox(
+                    height: 50,
+                    width: 50,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      backgroundColor: Colors.red,
+                    ),
+                  ),
               ),
-              TextFormField(
-                decoration: InputDecoration(hintText: 'Lobby Name'),
-                keyboardType: TextInputType.name,
-                autocorrect: false,
-                validator: controller.validateLobbyName,
-                onSaved: controller.saveLobbyName,
-              ),
-              ElevatedButton(
-                onPressed: controller.create_lobby,
-                child: Text('Create Lobby'),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -114,6 +126,8 @@ class _Controller {
     FormState? currentState = state.lobbyNameKey.currentState;
     if (currentState == null || !currentState.validate()) return;
 
+    state.showSpinner = true;
+    state.render(() {});
     currentState.save();
 
     try {
@@ -199,6 +213,8 @@ class _Controller {
           ARGS.PLAYER: player,
         },
       );
+      state.showSpinner = false;
+      state.render(() {});
     } catch (e) {
       print('======== Error creating lobby: $e');
     }

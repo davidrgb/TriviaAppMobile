@@ -65,6 +65,7 @@ class _GameScreenState extends State<GameScreen> {
                     builder: (BuildContext context) {
                       return _helpDialog(
                         context,
+                        controller,
                       );
                     });
               },
@@ -143,11 +144,16 @@ class _GameScreenState extends State<GameScreen> {
                                 child: ElevatedButton(
                                   onPressed: () {},
                                   style: ElevatedButton.styleFrom(
-                                    primary: widget.lobby.state == 1 ? playerAnswers[i] ? Colors.red : Colors.orange : widget.lobby.playerIndex %
-                                                widget.lobby.players.length ==
-                                            i
-                                        ? Colors.red
-                                        : Colors.grey,
+                                    primary: widget.lobby.state == 1
+                                        ? playerAnswers[i]
+                                            ? Colors.red
+                                            : Colors.orange
+                                        : widget.lobby.playerIndex %
+                                                    widget
+                                                        .lobby.players.length ==
+                                                i
+                                            ? Colors.red
+                                            : Colors.grey,
                                   ),
                                   child: Text(
                                       '${widget.lobby.players[i]['name']}: ${widget.lobby.players[i]['score']}'),
@@ -221,7 +227,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 }
 
-AlertDialog _helpDialog(BuildContext context) {
+AlertDialog _helpDialog(BuildContext context, _Controller controller) {
   return AlertDialog(
       title: const Text('How To Play'),
       content: SingleChildScrollView(
@@ -229,20 +235,39 @@ AlertDialog _helpDialog(BuildContext context) {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-                'The goal of the game is to guess the name of the hidden item based on the information revealed to you.', style: const TextStyle(fontSize: 18),),
-            const SizedBox(height: 10,),
+              'The goal of the game is to guess the name of the hidden item based on the information revealed to you.',
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
             const Text(
-                'Each turn, the player highlighted in red on the scrollable scoreboard will pick one hidden piece of information to reveal.', style: const TextStyle(fontSize: 18),),
-            const SizedBox(height: 10,),
+              'Each turn, the player highlighted in red on the scrollable scoreboard will pick one hidden piece of information to reveal.',
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
             const Text(
-                'After the player has made their selection, everyone will try to guess the hidden item. Players who have not guessed will appear orange on the scoreboard while players who have guessed will appear red. If anyone gets the answer, they will gain one point and the game will progress to the next question. Otherwise, players continue trying to find the answer to the hidden item until there is no information left to reveal.', style: const TextStyle(fontSize: 18),)
+              'After the player has made their selection, everyone will try to guess the hidden item. Players who have not guessed will appear orange on the scoreboard while players who have guessed will appear red. If anyone gets the answer, they will gain one point and the game will progress to the next question. Otherwise, players continue trying to find the answer to the hidden item until there is no information left to reveal.',
+              style: const TextStyle(fontSize: 18),
+            ),
+            const Divider(
+                thickness: 2,
+                color: Colors.white,
+              ),
+            ElevatedButton(
+              onPressed: () => controller.resetListener(context),
+              child: const Text('Refresh'),
+            ),
           ],
         ),
       ));
 }
 
-AlertDialog _popupDialog(
-    BuildContext context, bool correct, bool over, String answer) {
+AlertDialog _popupDialog(BuildContext context, bool correct, bool over,
+    String answer, var playerAnswer) {
+  print(playerAnswer);
   return AlertDialog(
       title: correct
           ? const Text('Correct!')
@@ -253,8 +278,23 @@ AlertDialog _popupDialog(
         mainAxisSize: MainAxisSize.min,
         children: [
           over
-              ? Text('The answer is $answer', style: const TextStyle(fontSize: 18),)
-              : const Text('You have another chance', style: TextStyle(fontSize: 18),)
+              ? Text(
+                  'The answer is $answer',
+                  style: const TextStyle(fontSize: 18),
+                )
+              : const Text(
+                  'You have another chance',
+                  style: TextStyle(fontSize: 18),
+                ),
+          const Divider(
+            thickness: 2,
+            color: Colors.white,
+          ),
+          for (var i = 0; i < playerAnswer.length; i++)
+            Text(
+              '${playerAnswer[i]['name']} | ${playerAnswer[i]['answer'].toString().compareTo('null_pass') == 0 ? 'passed' : playerAnswer[i]['answer'].toString()}',
+              style: const TextStyle(fontSize: 18),
+            )
         ],
       ));
 }
@@ -264,8 +304,82 @@ class _Controller {
   late StreamSubscription<DocumentSnapshot<Map<String, dynamic>>> listener;
   String answer = "";
   String lastQuestionAnswer = "";
+  var storedAnswers;
 
   _Controller(this.state) {
+    listenerFunction();
+  }
+
+  void revealTile(field, data) async {
+    Map<String, dynamic> updateInfo = {};
+    state.widget.lobby.questions[0]['fields'][field]['data'][data]['revealed'] =
+        true;
+    updateInfo[Lobby.QUESTIONS] = state.widget.lobby.questions;
+    updateInfo[Lobby.STATE] = 1;
+    await FirestoreController.updateLobby(
+        docId: state.widget.lobby.docId!, updateInfo: updateInfo);
+    state.render(() => {});
+  }
+
+  String? validateAnswer(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter an answer';
+    } else {
+      return null;
+    }
+  }
+
+  void saveAnswer(String? value) {
+    if (value != null) answer = value;
+  }
+
+  void guessAnswer() async {
+    FormState? currentState = state.answerKey.currentState;
+    if (currentState == null || !currentState.validate()) return;
+
+    currentState.save();
+    currentState.reset();
+
+    Map<String, dynamic> updateInfo = {};
+    state.widget.lobby.answers.add({
+      "id": state.widget.player.id,
+      "name": state.widget.player.name,
+      "answer": answer,
+    });
+    updateInfo[Lobby.ANSWERS] = state.widget.lobby.answers;
+    await FirestoreController.updateLobby(
+        docId: state.widget.lobby.docId!, updateInfo: updateInfo);
+  }
+
+  void pass() async {
+    answer = 'null_pass';
+
+    Map<String, dynamic> updateInfo = {};
+    state.widget.lobby.answers.add({
+      "id": state.widget.player.id,
+      "name": state.widget.player.name,
+      "answer": 'null_pass',
+    });
+    updateInfo[Lobby.ANSWERS] = state.widget.lobby.answers;
+    await FirestoreController.updateLobby(
+        docId: state.widget.lobby.docId!, updateInfo: updateInfo);
+  }
+
+  Future<bool> leave() async {
+    if (state.widget.lobby.state == 3) {
+      if (state.widget.lobby.id.toString().compareTo(state.widget.player.id) ==
+          0) {
+        await FirestoreController.deleteLobby(docId: state.widget.lobby.docId!);
+      }
+      await Navigator.pushNamed(
+        state.context,
+        HomeScreen.routeName,
+      );
+    }
+    return false;
+  }
+
+  void listenerFunction() {
     final reference = FirebaseFirestore.instance
         .collection(Constant.LOBBY_COLLECTION)
         .doc(state.widget.lobby.docId);
@@ -284,22 +398,27 @@ class _Controller {
               context: state.context,
               builder: (BuildContext context) {
                 return _popupDialog(
-                    context,
-                    storedAnswer
-                            .toLowerCase()
-                            .compareTo(lastQuestionAnswer.toLowerCase()) ==
-                        0,
-                    false,
-                    lastQuestionAnswer);
+                  context,
+                  storedAnswer
+                          .toLowerCase()
+                          .compareTo(lastQuestionAnswer.toLowerCase()) ==
+                      0,
+                  false,
+                  lastQuestionAnswer,
+                  storedAnswers,
+                );
               });
         }
         answer = "";
       }
       if (state.widget.lobby.state == 1) {
         lastQuestionAnswer = state.widget.lobby.questions[0]['answer'];
+        storedAnswers = [...state.widget.lobby.answers];
         for (int i = 0; i < state.widget.lobby.players.length; i++) {
           for (int j = 0; j < state.widget.lobby.answers.length; j++) {
-            if (state.widget.lobby.players[i]['id'].toString().compareTo(state.widget.lobby.answers[j]['id'].toString()) == 0) {
+            if (state.widget.lobby.players[i]['id'].toString().compareTo(
+                    state.widget.lobby.answers[j]['id'].toString()) ==
+                0) {
               state.playerAnswers[i] = true;
             }
           }
@@ -312,13 +431,15 @@ class _Controller {
               context: state.context,
               builder: (BuildContext context) {
                 return _popupDialog(
-                    context,
-                    storedAnswer
-                            .toLowerCase()
-                            .compareTo(lastQuestionAnswer.toLowerCase()) ==
-                        0,
-                    true,
-                    lastQuestionAnswer);
+                  context,
+                  storedAnswer
+                          .toLowerCase()
+                          .compareTo(lastQuestionAnswer.toLowerCase()) ==
+                      0,
+                  true,
+                  lastQuestionAnswer,
+                  storedAnswers,
+                );
               });
         }
         answer = "";
@@ -388,70 +509,9 @@ class _Controller {
     });
   }
 
-  void revealTile(field, data) async {
-    Map<String, dynamic> updateInfo = {};
-    state.widget.lobby.questions[0]['fields'][field]['data'][data]['revealed'] =
-        true;
-    updateInfo[Lobby.QUESTIONS] = state.widget.lobby.questions;
-    updateInfo[Lobby.STATE] = 1;
-    await FirestoreController.updateLobby(
-        docId: state.widget.lobby.docId!, updateInfo: updateInfo);
-    state.render(() => {});
-  }
-
-  String? validateAnswer(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter an answer';
-    } else {
-      return null;
-    }
-  }
-
-  void saveAnswer(String? value) {
-    if (value != null) answer = value;
-  }
-
-  void guessAnswer() async {
-    FormState? currentState = state.answerKey.currentState;
-    if (currentState == null || !currentState.validate()) return;
-
-    currentState.save();
-    currentState.reset();
-
-    Map<String, dynamic> updateInfo = {};
-    state.widget.lobby.answers.add({
-      "id": state.widget.player.id,
-      "answer": answer,
-    });
-    updateInfo[Lobby.ANSWERS] = state.widget.lobby.answers;
-    await FirestoreController.updateLobby(
-        docId: state.widget.lobby.docId!, updateInfo: updateInfo);
-  }
-
-  void pass() async {
-    answer = 'null_pass';
-
-    Map<String, dynamic> updateInfo = {};
-    state.widget.lobby.answers.add({
-      "id": state.widget.player.id,
-      "answer": 'null_pass',
-    });
-    updateInfo[Lobby.ANSWERS] = state.widget.lobby.answers;
-    await FirestoreController.updateLobby(
-        docId: state.widget.lobby.docId!, updateInfo: updateInfo);
-  }
-
-  Future<bool> leave() async {
-    if (state.widget.lobby.state == 3) {
-      if (state.widget.lobby.id.toString().compareTo(state.widget.player.id) ==
-          0) {
-        await FirestoreController.deleteLobby(docId: state.widget.lobby.docId!);
-      }
-      await Navigator.pushNamed(
-        state.context,
-        HomeScreen.routeName,
-      );
-    }
-    return false;
+  void resetListener(BuildContext context) {
+    listener.cancel();
+    listenerFunction();
+    Navigator.of(context).pop();
   }
 }

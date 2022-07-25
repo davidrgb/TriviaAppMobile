@@ -52,6 +52,7 @@ class _HiLoScreenState extends State<HiLoScreen> {
                     builder: (BuildContext context) {
                       return _helpDialog(
                         context,
+                        controller,
                       );
                     });
               },
@@ -183,7 +184,7 @@ class _HiLoScreenState extends State<HiLoScreen> {
   }
 }
 
-AlertDialog _helpDialog(BuildContext context) {
+AlertDialog _helpDialog(BuildContext context, _Controller controller) {
   return AlertDialog(
       title: const Text('How To Play'),
       content: SingleChildScrollView(
@@ -207,20 +208,30 @@ AlertDialog _helpDialog(BuildContext context) {
             const Text(
               'Players who guess correctly get a point and the game progresses to the next question.',
               style: const TextStyle(fontSize: 18),
-            )
+            ),
+            const Divider(
+              thickness: 2,
+              color: Colors.white,
+            ),
+            ElevatedButton(
+              onPressed: () => controller.resetListener(context),
+              child: const Text('Refresh'),
+            ),
           ],
         ),
       ));
 }
 
 AlertDialog _popupDialog(
-    BuildContext context,
-    bool correct,
-    bool over,
-    String firstName,
-    double firstRating,
-    String secondName,
-    double secondRating) {
+  BuildContext context,
+  bool correct,
+  bool over,
+  String firstName,
+  double firstRating,
+  String secondName,
+  double secondRating,
+  var playerAnswer,
+) {
   return AlertDialog(
       title: correct
           ? const Text('Correct!')
@@ -242,6 +253,15 @@ AlertDialog _popupDialog(
                 '$secondName | $secondRating.',
                 style: const TextStyle(fontSize: 18),
               ),
+              const Divider(
+                thickness: 2,
+                color: Colors.white,
+              ),
+              for (var i = 0; i < playerAnswer.length; i++)
+                Text(
+                  '${playerAnswer[i]['name']} | ${playerAnswer[i]['answer'].toString().compareTo('0') == 0 ? firstName : playerAnswer[i]['answer'].toString().compareTo('2') == 0 ? secondName : '='}',
+                  style: const TextStyle(fontSize: 18),
+                )
             ],
           )
         ],
@@ -257,8 +277,40 @@ class _Controller {
   double lastQuestionFirstRating = 0;
   String lastQuestionSecondName = "";
   double lastQuestionSecondRating = 0;
+  var storedAnswers;
 
   _Controller(this.state) {
+    listenerFunction();
+  }
+
+  void guessAnswer(int answer) async {
+    this.answer = answer;
+    Map<String, dynamic> updateInfo = {};
+    state.widget.lobby.answers.add({
+      "id": state.widget.player.id,
+      "name": state.widget.player.name,
+      "answer": answer.toString(),
+    });
+    updateInfo[Lobby.ANSWERS] = state.widget.lobby.answers;
+    await FirestoreController.updateLobby(
+        docId: state.widget.lobby.docId!, updateInfo: updateInfo);
+  }
+
+  Future<bool> leave() async {
+    if (state.widget.lobby.state == 3) {
+      if (state.widget.lobby.id.toString().compareTo(state.widget.player.id) ==
+          0) {
+        await FirestoreController.deleteLobby(docId: state.widget.lobby.docId!);
+      }
+      await Navigator.pushNamed(
+        state.context,
+        HomeScreen.routeName,
+      );
+    }
+    return false;
+  }
+
+  void listenerFunction() {
     final reference = FirebaseFirestore.instance
         .collection(Constant.LOBBY_COLLECTION)
         .doc(state.widget.lobby.docId);
@@ -288,6 +340,7 @@ class _Controller {
         lastQuestionSecondName = state.widget.lobby.questions[1]['answer'];
         lastQuestionSecondRating = double.parse(
             state.widget.lobby.questions[1]['fields'][0]['data'][0]['data']);
+        storedAnswers = [...state.widget.lobby.answers];
       }
       if (state.widget.lobby.state == 2) {
         int storedAnswer = answer;
@@ -310,6 +363,7 @@ class _Controller {
                 lastQuestionFirstRating,
                 lastQuestionSecondName,
                 lastQuestionSecondRating,
+                storedAnswers,
               );
             },
           );
@@ -372,29 +426,9 @@ class _Controller {
     });
   }
 
-  void guessAnswer(int answer) async {
-    this.answer = answer;
-    Map<String, dynamic> updateInfo = {};
-    state.widget.lobby.answers.add({
-      "id": state.widget.player.id,
-      "answer": answer.toString(),
-    });
-    updateInfo[Lobby.ANSWERS] = state.widget.lobby.answers;
-    await FirestoreController.updateLobby(
-        docId: state.widget.lobby.docId!, updateInfo: updateInfo);
-  }
-
-  Future<bool> leave() async {
-    if (state.widget.lobby.state == 3) {
-      if (state.widget.lobby.id.toString().compareTo(state.widget.player.id) ==
-          0) {
-        await FirestoreController.deleteLobby(docId: state.widget.lobby.docId!);
-      }
-      await Navigator.pushNamed(
-        state.context,
-        HomeScreen.routeName,
-      );
-    }
-    return false;
+  void resetListener(BuildContext context) {
+    listener.cancel();
+    listenerFunction();
+    Navigator.of(context).pop();
   }
 }
